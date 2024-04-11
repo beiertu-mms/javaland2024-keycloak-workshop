@@ -1,6 +1,10 @@
 ---
 version: '3.8'
 
+volumes:
+  kc_data:
+    name: keycloak-workshop-data
+
 services:
   keycloak:
     image: quay.io/keycloak/keycloak:24.0
@@ -22,22 +26,18 @@ services:
       - "8025:8025"
 
   bookshop:
-    profiles:
-      - bookshop
     image: dasniko/bookshop:0.0.5
     command: ["wait-for-it.sh", "keycloak:8080", "--", "/deployments/entrypoint.sh"]
+    env_file:
+      - bookshop.env
     environment:
       WAITFORIT_TIMEOUT: '120'
       AUTH_SERVER_URL: http://keycloak:8080/realms/bookshop
       SHOP_CLIENT_ID: shop
-      SHOP_CLIENT_SECRET: 08d171bf-ba03-44db-8279-f678d68021d7
+      # SHOP_CLIENT_SECRET -> create and set this in the bookshop.env file
     ports:
-      - "3000:3000"
-      - "8081:8081"
-      - "8083:8083"
+      - "3000:3000" # checkout
+      - "8081:8081" # shop
+      - "8083:8083" # cart
     volumes:
       - ./bookshop-keycloak.json:/usr/share/nginx/html/keycloak.json
-
-volumes:
-  kc_data:
-    name: keycloak-workshop-data
